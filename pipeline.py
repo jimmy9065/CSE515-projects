@@ -12,7 +12,8 @@ class DogsvsCats:
     IMAGE_HEIGHT = 375
     IMAGE_WIDTH = 500
 
-    def __init__(self, f_path, sess, test_size=1647, batch_size=2000, seed=0):
+    def __init__(self, f_path, sess,
+                 test_size=1647, batch_size=2000, seed=0, num_tread=4):
         """
         input set path, randomly pick 3647(default) instance as test case
         intput sess
@@ -45,32 +46,38 @@ class DogsvsCats:
                 [self.test_images, self.test_labels])
 
         # return single image everytime read the input queue
+        # pipeline for train case
         file_content = tf.read_file(train_input_queue[0])
-        train_image = tf.image.decode_jpeg(
-                file_content,
-                channels=self.NUM_COLORS)
 
-        train_labels = train_input_queue[1]
+        train_image_label_list = []
+        for i in range(num_tread):
+            train_image = tf.image.decode_jpeg(
+                    file_content,
+                    channels=self.NUM_COLORS)
+            train_label = train_input_queue[1]
+            train_image.set_shape(
+                    [self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUM_COLORS])
+            train_image_label_list.append([train_image, train_label])
 
-        file_content = tf.read_file(test_input_queue[0])
-        test_image = tf.image.decode_jpeg(
-                file_content,
-                channels=self.NUM_COLORS)
+        # pipeline for test case
+        test_image_label_list = []
+        for i in range(num_tread):
+            file_content = tf.read_file(test_input_queue[0])
+            test_image = tf.image.decode_jpeg(
+                    file_content,
+                    channels=self.NUM_COLORS)
+            test_label = test_input_queue[1]
+            test_image.set_shape(
+                    [self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUM_COLORS])
+            test_image_label_list.append([test_image, test_label])
 
-        test_labels = test_input_queue[1]
-
-        # Now train_image and test_image only has one image
-        train_image.set_shape(
-                [self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUM_COLORS])
-        test_image.set_shape(
-                [self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUM_COLORS])
-
-        self._train_image_batch, self._train_labels_batch = tf.train.batch(
-                [train_image, train_labels],
+        self._train_image_batch, self._train_label_batch = tf.train.batch_join(
+                train_image_label_list,
+                # (train_image, train_label),
                 batch_size=batch_size)
 
-        self._test_image_batch, self._test_labels_batch = tf.train.batch(
-                [test_image, test_labels],
+        self._test_image_batch, self._test_labels_batch = tf.train.batch_join(
+                test_image_label_list,
                 batch_size=test_size)
 
         sess.run(tf.global_variables_initializer())
@@ -99,7 +106,7 @@ class DogsvsCats:
         return train_image_batch and train_labels_batch
         the order of example is shuffle in every iteration and epoch
         """
-        v = self._sess.run([self._train_image_batch, self._train_labels_batch])
+        v = self._sess.run([self._train_image_batch, self._train_label_batch])
         return v
 
     def get_test_set(self):

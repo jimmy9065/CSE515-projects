@@ -12,7 +12,7 @@ class DogsvsCats:
     IMAGE_HEIGHT = 375
     IMAGE_WIDTH = 500
 
-    def __init__(self, f_path, sess, test_size=3647, batch_size=2000, seed=0):
+    def __init__(self, f_path, sess, test_size=1647, batch_size=2000, seed=0):
         """
         input set path, randomly pick 3647(default) instance as test case
         intput sess
@@ -34,6 +34,7 @@ class DogsvsCats:
 
         self.generate_test_cases()
 
+        print('here*********************')
         # Produce a queue of the filenames
         train_input_queue = tf.train.slice_input_producer(
                 [self.train_images, self.train_labels],
@@ -114,13 +115,12 @@ class DogsvsCats:
 
 
 if __name__ == '__main__':
-    print('here***************************************8')
     sess = tf.Session()
     train_path = '/home/jimmy/WinDisk/data/pics/'
     data = DogsvsCats(train_path, sess)
 
-    # for it in range(10):
-    #     train_images, train_labels = data.get_train_batch()
+    for it in range(10):
+        train_images, train_labels = data.get_train_batch()
 
     test_images, test_labels = data.get_test_set()
     print(test_labels.shape)

@@ -16,7 +16,7 @@ print(test_labels.shape)
 print(sum(test_labels))
 
 cnt = sum(test_labels)
-for i in range(10):
+for i in range(11):
     images, labels = data.get_train_batch()
     if i == 0:
         print(images.shape)
@@ -25,7 +25,7 @@ for i in range(10):
 print(cnt)
 
 cnt = sum(test_labels)
-for i in range(10):
+for i in range(11):
     images, labels = data.get_train_batch()
     if i == 0:
         print(images.shape)

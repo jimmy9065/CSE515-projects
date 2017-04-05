@@ -12,7 +12,7 @@ class DogsvsCats:
     IMAGE_HEIGHT = 375
     IMAGE_WIDTH = 500
 
-    def __init__(self, file_path, sess, test_size=3647, batch_size=2000):
+    def __init__(self, f_path, sess, test_size=3647, batch_size=2000, seed=0):
         """
         input set path, randomly pick 3647(default) instance as test case
         intput sess
@@ -20,26 +20,28 @@ class DogsvsCats:
         self._sess = sess
         self._test_size = test_size
         self._batch_size = batch_size
+        self._seed = seed
 
         self.test_size = test_size
 
-        files = [file_path+f for f in os.listdir(file_path)]
+        files = [f_path+f for f in os.listdir(f_path)]
+        self._len_files = len(files)
         # generate labels
         labels = [1 if re.search('dog[0-9]+.jpeg', f) else 0 for f in files]
 
         self._all_images = ops.convert_to_tensor(files, dtype=dtypes.string)
         self._all_labels = ops.convert_to_tensor(labels, dtype=dtypes.int32)
 
-        self.get_train_batch()
+        self.generate_test_cases()
 
         # Produce a queue of the filenames
         train_input_queue = tf.train.slice_input_producer(
                 [self.train_images, self.train_labels],
-                shuffle=True)  # shuffle the queue when output
+                shuffle=True,  # shuffle the queue when output
+                seed=self._seed)
 
         test_input_queue = tf.train.slice_input_producer(
-                [self.test_images, self.test_labels],
-                shuffle=True)  # shuffle the queue when output
+                [self.test_images, self.test_labels])
 
         # return single image everytime read the input queue
         file_content = tf.read_file(train_input_queue[0])
@@ -77,7 +79,8 @@ class DogsvsCats:
                 sess=self._sess)
 
     def generate_test_cases(self):
-        partitions = [0] * len(self.files)
+        random.seed(self._seed)
+        partitions = [0] * self._len_files
         partitions[:self.test_size] = [1] * self.test_size
         random.shuffle(partitions)
 
@@ -111,12 +114,13 @@ class DogsvsCats:
 
 
 if __name__ == '__main__':
+    print('here***************************************8')
     sess = tf.Session()
     train_path = '/home/jimmy/WinDisk/data/pics/'
     data = DogsvsCats(train_path, sess)
 
-    for it in range(10):
-        train_images, train_labels = data.get_train_batch()
+    # for it in range(10):
+    #     train_images, train_labels = data.get_train_batch()
 
     test_images, test_labels = data.get_test_set()
     print(test_labels.shape)

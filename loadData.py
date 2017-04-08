@@ -34,6 +34,30 @@ print(min(shapes[:, 1]), '--', max(shapes[:, 1]), stats.mode(shapes[:, 1]))
 #      for dogs we will throw 681+321=1002 pics
 # The loss will be minor
 
+print('comparing ratios:')
+cnt1 = 0
+cnt2 = 0
+cnt3 = 0
+cnt4 = 0
+for i in range(len(ratios)):
+    if ratios[i] > 1.5:
+        if re.search('^cat', files[i]):
+            cnt1 += 1
+        else:
+            cnt2 += 1
+    if ratios[i] < 0.67:
+        if re.search('^cat', files[i]):
+            cnt3 += 1
+        else:
+            cnt4 += 1
+
+print('cats: ', cnt1+cnt3)
+print('dogs: ', cnt2+cnt4)
+cnt = cnt1+cnt2+cnt3+cnt4
+print('total: ', cnt1+cnt2, cnt3+cnt4, cnt, 25000-cnt)
+
+sys.exit()
+
 print('comparing length&width')
 cnt1 = 0
 cnt2 = 0
@@ -53,29 +77,6 @@ for i in range(len(shapes)):
 
 print('cats: ', cnt1,cnt3)
 print('dogs: ', cnt2,cnt4)
-print('total: ', cnt1+cnt2, cnt3+cnt4, cnt1+cnt2+cnt3+cnt4)
-
-sys.exit()
-
-print('comparing ratios:')
-cnt1 = 0
-cnt2 = 0
-cnt3 = 0
-cnt4 = 0
-for i in range(len(ratios)):
-    if ratios[i] > 1.55:
-        if re.search('^cat', files[i]):
-            cnt1 += 1
-        else:
-            cnt2 += 1
-    if ratios[i] < 0.6:
-        if re.search('^cat', files[i]):
-            cnt3 += 1
-        else:
-            cnt4 += 1
-
-print('cats: ', cnt1+cnt3)
-print('dogs: ', cnt2+cnt4)
 print('total: ', cnt1+cnt2, cnt3+cnt4, cnt1+cnt2+cnt3+cnt4)
 sys.exit()
 

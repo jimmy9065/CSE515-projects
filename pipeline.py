@@ -9,13 +9,12 @@ from numpy import random
 
 class DogsvsCats:
     NUM_COLORS = 3
-    IMAGE_HEIGHT = 375
-    IMAGE_WIDTH = 500
+    IMAGE_SIZE = 256
 
     def __init__(self, f_path, sess,
-                 test_size=1647, batch_size=2000, seed=0, num_tread=4):
+                 test_size=1729, batch_size=1000, seed=0, num_tread=4):
         """
-        input set path, randomly pick 3647(default) instance as test case
+        input set path, randomly pick 1729(default) instance as test case
         intput sess
         """
         self._sess = sess
@@ -35,7 +34,6 @@ class DogsvsCats:
 
         self.generate_test_cases()
 
-        print('here*********************')
         # Produce a queue of the filenames
         train_input_queue = tf.train.slice_input_producer(
                 [self.train_images, self.train_labels],
@@ -56,7 +54,7 @@ class DogsvsCats:
                     channels=self.NUM_COLORS)
             train_label = train_input_queue[1]
             train_image.set_shape(
-                    [self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUM_COLORS])
+                    [self.IMAGE_SIZE, self.IMAGE_SIZE, self.NUM_COLORS])
             train_image_label_list.append([train_image, train_label])
 
         # pipeline for test case
@@ -68,17 +66,20 @@ class DogsvsCats:
                     channels=self.NUM_COLORS)
             test_label = test_input_queue[1]
             test_image.set_shape(
-                    [self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUM_COLORS])
+                    [self.IMAGE_SIZE, self.IMAGE_SIZE, self.NUM_COLORS])
             test_image_label_list.append([test_image, test_label])
 
-        self._train_image_batch, self._train_label_batch = tf.train.batch_join(
+        train_image_batch_int, self._train_label_batch = tf.train.batch_join(
                 train_image_label_list,
                 # (train_image, train_label),
                 batch_size=batch_size)
 
-        self._test_image_batch, self._test_labels_batch = tf.train.batch_join(
+        test_image_batch_int, self._test_labels_batch = tf.train.batch_join(
                 test_image_label_list,
                 batch_size=test_size)
+
+        self._train_image_batch = tf.to_float(train_image_batch_int) / 255.0
+        self._test_image_batch = tf.to_float(test_image_batch_int) / 255.0
 
         sess.run(tf.global_variables_initializer())
         self._coord = tf.train.Coordinator()
@@ -86,7 +87,17 @@ class DogsvsCats:
                 coord=self._coord,
                 sess=self._sess)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        self.end_train()
+
     def generate_test_cases(self):
+        """
+        This is only choose some of the image to
+        be the test case, not return a test batch
+        """
         random.seed(self._seed)
         partitions = [0] * self._len_files
         partitions[:self.test_size] = [1] * self.test_size
@@ -122,14 +133,21 @@ class DogsvsCats:
 
 
 if __name__ == '__main__':
-    sess = tf.Session()
-    train_path = '/home/jimmy/WinDisk/data/pics/'
-    data = DogsvsCats(train_path, sess)
+    print('Running test main in pipeline.py')
+    with tf.Session() as sess:
+        train_path = '/home/jimmy/WinDisk/data/pics/'
+        data = DogsvsCats(train_path, sess, batch_size=500)
 
-    for it in range(10):
-        train_images, train_labels = data.get_train_batch()
+        for it in range(10):
+            train_images, train_labels = data.get_train_batch()
+            print(train_images.shape)
+            print(train_images[0, 0, 0, :])
 
-    test_images, test_labels = data.get_test_set()
-    print(test_labels.shape)
+        test_images, test_labels = data.get_test_set()
+        print(test_labels.shape)
+        print(test_labels[:10])
+        print(sum(test_labels))
+
+        data.end_train()
 
     sys.exit()

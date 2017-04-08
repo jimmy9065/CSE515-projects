@@ -7,7 +7,7 @@ from tensorflow.python.framework import dtypes
 from numpy import random
 
 
-class DogsvsCats:
+class DC_dataset:
     NUM_COLORS = 3
     IMAGE_SIZE = 256
 
@@ -90,7 +90,7 @@ class DogsvsCats:
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         self.end_train()
 
     def generate_test_cases(self):
@@ -134,20 +134,18 @@ class DogsvsCats:
 
 if __name__ == '__main__':
     print('Running test main in pipeline.py')
+    train_path = '/home/jimmy/WinDisk/data/pics/'
     with tf.Session() as sess:
-        train_path = '/home/jimmy/WinDisk/data/pics/'
-        data = DogsvsCats(train_path, sess, batch_size=500)
+        with DC_dataset(train_path, sess, batch_size=500) as data:
+            # data = DogsvsCats(train_path, sess, batch_size=500)
+            for it in range(10):
+                train_images, train_labels = data.get_train_batch()
+                print('train_images shape in every batch', train_images.shape)
+                print('left top pixel RGB values[0,1]:',
+                      train_images[0, 0, 0, :])
 
-        for it in range(10):
-            train_images, train_labels = data.get_train_batch()
-            print(train_images.shape)
-            print(train_images[0, 0, 0, :])
-
-        test_images, test_labels = data.get_test_set()
-        print(test_labels.shape)
-        print(test_labels[:10])
-        print(sum(test_labels))
-
-        data.end_train()
-
-    sys.exit()
+            test_images, test_labels = data.get_test_set()
+            print('test_lables shape= ', test_labels.shape)
+            print('first 10th test_labels:', test_labels[:10])
+            print('number of positive cases in test_labels:', sum(test_labels))
+sys.exit()

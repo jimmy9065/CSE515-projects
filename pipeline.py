@@ -1,5 +1,5 @@
 import os
-import sys
+# import sys
 import re
 import tensorflow as tf
 from tensorflow.python.framework import ops
@@ -148,4 +148,3 @@ if __name__ == '__main__':
             print('test_lables shape= ', test_labels.shape)
             print('first 10th test_labels:', test_labels[:10])
             print('number of positive cases in test_labels:', sum(test_labels))
-sys.exit()

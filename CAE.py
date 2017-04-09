@@ -13,7 +13,7 @@ channel_sizes = [3, 16, 32, 16, 8]  # the first one is for RGB
 strides_sizes = [2, 2, 2, 2]
 BATCH_SIZE = 100
 TEST_SIZE = 100
-iters = 100
+iters = 2000
 output_shapes = [IMG_SIZE]  # the first one is for img_size
 study_rate = 0.01
 
@@ -80,9 +80,15 @@ def Conv_autoencdoer(display=False, generate=False, save=False,
 
             if display:
                 new_images = sess.run(xp,
-                                      feed_dict={x: train_images[:3, :, :, :]})
-                plt.imshow(train_images[0, :, :, :])
-                plt.imshow(new_images[0, :, :, :])
+                                      feed_dict={x: train_images})
+                fig = plt.figure()
+                for i in range(3):
+                    a = fig.add_subplot(3, 2, 2*i+1)
+                    plt.imshow(train_images[i, :, :, :])
+                    a.set_title('Origin')
+                    a = fig.add_subplot(3, 2, 2*i+2)
+                    plt.imshow(new_images[i, :, :, :])
+                    a.set_title('Decoded')
                 plt.show()
 
         # Generate feature space
@@ -110,5 +116,5 @@ def Conv_autoencdoer(display=False, generate=False, save=False,
 
 
 if __name__ == '__main__':
-    Conv_autoencdoer()
+    Conv_autoencdoer(display=True)
     # Conv_autoencdoer(generate=True, train_size=3000, test_size=200)

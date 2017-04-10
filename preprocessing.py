@@ -6,8 +6,8 @@ import numpy as np
 import shutil
 from progressbar import ProgressBar, Bar, Percentage
 from multiprocessing import Process
-import matplotlib.pyplot as plt
-from PIL import Image
+# import matplotlib.pyplot as plt
+# from PIL import Image
 
 
 # path for source images

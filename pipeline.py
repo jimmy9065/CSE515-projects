@@ -9,7 +9,7 @@ from numpy import random
 
 class DC_dataset:
     NUM_COLORS = 3
-    IMAGE_SIZE = 256
+    IMAGE_SIZE = 128
 
     def __init__(self, f_path, sess,
                  test_size=1729, batch_size=1000, seed=0, num_tread=4):
@@ -58,9 +58,10 @@ class DC_dataset:
             train_image_label_list.append([train_image, train_label])
 
         # pipeline for test case
+        file_content = tf.read_file(test_input_queue[0])
+
         test_image_label_list = []
         for i in range(num_tread):
-            file_content = tf.read_file(test_input_queue[0])
             test_image = tf.image.decode_jpeg(
                     file_content,
                     channels=self.NUM_COLORS)
@@ -71,7 +72,6 @@ class DC_dataset:
 
         train_image_batch_int, self._train_label_batch = tf.train.batch_join(
                 train_image_label_list,
-                # (train_image, train_label),
                 batch_size=batch_size)
 
         test_image_batch_int, self._test_labels_batch = tf.train.batch_join(
@@ -81,7 +81,6 @@ class DC_dataset:
         self._train_image_batch = tf.to_float(train_image_batch_int) / 255.0
         self._test_image_batch = tf.to_float(test_image_batch_int) / 255.0
 
-        sess.run(tf.global_variables_initializer())
         self._coord = tf.train.Coordinator()
         self._threads = tf.train.start_queue_runners(
                 coord=self._coord,

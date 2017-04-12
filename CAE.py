@@ -7,14 +7,15 @@ import sys
 
 
 train_path = '/home/jimmy/WinDisk/data/pics/'
+out_put_path = '/home/jimmy/WinDisk/data/'
 # train_path = '/home/jimmy/Dropbox/CSE515-Team/projects/data/pics/'
 IMG_SIZE = 128
 layer_size = 3
 filter_sizes = [5, 5, 5, 5]
-channel_sizes = [3, 16, 32, 16, 8]  # the first one is for RGB
+channel_sizes = [3, 16, 32, 8, 8]  # the first one is for RGB
 strides_sizes = [1, 2, 2, 2]
-BATCH_SIZE = 50
-iters = 50
+BATCH_SIZE = 100
+iters = 30000
 output_shapes = [IMG_SIZE]  # the first one is for img_size
 study_rate = 0.01
 Filters_dict = {}
@@ -161,7 +162,11 @@ def Conv_autoencdoer(display=False, generate=False, save=False,
                 print('shape of test_set', test_x.shape)
                 print('n_positive case in test_set', sum(test_labels))
 
-        return ((train_xs, train_labelss), (test_x, test_labels))
+        np.save(out_put_path+'train_set.npy',
+                {'train_x': train_xs, 'train_labels': train_labelss})
+        np.save(out_put_path+'test_set.npy',
+                {'test_x': test_x, 'test_labelss': test_labels})
+        # return ((train_xs, train_labelss), (test_x, test_labels))
 
 
 if __name__ == '__main__':

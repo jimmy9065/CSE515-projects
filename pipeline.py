@@ -24,7 +24,7 @@ class DC_dataset:
 
         self.test_size = test_size
 
-        files = [f_path+f for f in os.listdir(f_path)]
+        files = [f_path+f for f in os.listdir(f_path) if re.search('.jpeg', f)]
         self._len_files = len(files)
         # generate labels
         labels = [1 if re.search('dog[0-9]+.jpeg', f) else 0 for f in files]

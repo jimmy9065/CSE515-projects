@@ -7,15 +7,15 @@ import sys
 
 
 train_path = '/home/jimmy/WinDisk/data/pics/'
-out_put_path = '/home/jimmy/WinDisk/data/'
-# train_path = '/home/jimmy/Dropbox/CSE515-Team/projects/data/pics/'
+data_output_path = '/home/jimmy/WinDisk/data/'
+
 IMG_SIZE = 128
-layer_size = 3
-filter_sizes = [5, 5, 5, 5]
-channel_sizes = [3, 16, 32, 8, 8]  # the first one is for RGB
+layer_size = 4
+filter_sizes = [3, 3, 3, 3]
+channel_sizes = [3, 16, 32, 16, 8]  # the first one is for RGB
 strides_sizes = [1, 2, 2, 2]
-BATCH_SIZE = 100
-iters = 30000
+BATCH_SIZE = 200
+epoch = 30
 output_shapes = [IMG_SIZE]  # the first one is for img_size
 study_rate = 0.01
 Filters_dict = {}
@@ -73,6 +73,7 @@ def Conv_decoders(code_layer):
 
 def Conv_autoencdoer(display=False, generate=False, save=False,
                      train_size=100, test_size=100):
+    global study_rate
     x = tf.placeholder(tf.float32, shape=[None, IMG_SIZE, IMG_SIZE, 3])
 
     code_layer = Conv_encoders(x)
@@ -95,13 +96,18 @@ def Conv_autoencdoer(display=False, generate=False, save=False,
             init = tf.global_variables_initializer()
             sess.run(init)
 
-            for step in range(iters+1):
-                train_images, train_labels = data.get_train_batch()
-                c, _ = sess.run(
-                        [cost, optimizer],
-                        feed_dict={x: train_images})
-                if step % (iters / 10) == 0:
-                    print('step%d, loss %g' % (step, c))
+            for step in range(epoch):
+                if step == 10:
+                    study_rate = 0.001
+                if step == 20:
+                    study_rate = 0.0001
+                for ibatch in range(int(25000/BATCH_SIZE)):
+                    train_images, train_labels = data.get_train_batch()
+                    c, _ = sess.run(
+                            [cost, optimizer],
+                            feed_dict={x: train_images})
+
+                print('step%d, loss %g(%g)' % (step, c, np.sqrt(c)))
 
             sample_image = sess.run(code_flat, feed_dict={x: train_images})
             code_shape_np = sess.run(code_shape, feed_dict={x: train_images})
@@ -114,13 +120,13 @@ def Conv_autoencdoer(display=False, generate=False, save=False,
 
             if generate:
                 saver = tf.train.Saver(Filters_dict)
-                saver.save(sess, './CAE_weight.ckpt')
+                saver.save(sess, './weights/CAE_weight.ckpt')
     # Generate feature space
     if generate:
-        div = 20
+        div = 50
         with tf.Session() as sess:
             # sess.run(Filters, feed_dict=Filters_dict)
-            saver.restore(sess, './CAE_weight.ckpt')
+            saver.restore(sess, './weights/CAE_weight.ckpt')
             print('Creating Mapped Feature space')
             with DC_dataset(train_path, sess,
                             test_size=test_size,
@@ -162,13 +168,14 @@ def Conv_autoencdoer(display=False, generate=False, save=False,
                 print('shape of test_set', test_x.shape)
                 print('n_positive case in test_set', sum(test_labels))
 
-        np.save(out_put_path+'train_set.npy',
-                {'train_x': train_xs, 'train_labels': train_labelss})
-        np.save(out_put_path+'test_set.npy',
-                {'test_x': test_x, 'test_labelss': test_labels})
+        np.savez(data_output_path+'train.npy',
+                 train_x=train_xs, train_labels=train_labelss)
+        np.savez(data_output_path+'test.npy',
+                 test_x=test_x, test_labelss=test_labels)
         # return ((train_xs, train_labelss), (test_x, test_labels))
 
 
 if __name__ == '__main__':
     # Conv_autoencdoer(display=True)
-    Conv_autoencdoer(generate=True, train_size=20000, test_size=1500)
+    Conv_autoencdoer(display=True, generate=True,
+                     train_size=24000, test_size=1000)

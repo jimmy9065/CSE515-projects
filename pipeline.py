@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import dtypes
 from numpy import random
+import matplotlib.pyplot as plt
 
 
 class DC_dataset:
@@ -41,7 +42,8 @@ class DC_dataset:
                 seed=self._seed)
 
         test_input_queue = tf.train.slice_input_producer(
-                [self.test_images, self.test_labels])
+                [self.test_images, self.test_labels],
+                shuffle=False)
 
         # return single image everytime read the input queue
         # pipeline for train case
@@ -61,7 +63,8 @@ class DC_dataset:
         file_content = tf.read_file(test_input_queue[0])
 
         test_image_label_list = []
-        for i in range(num_tread):
+        # changed here num_tread
+        for i in range(4):
             test_image = tf.image.decode_jpeg(
                     file_content,
                     channels=self.NUM_COLORS)
@@ -76,7 +79,7 @@ class DC_dataset:
 
         test_image_batch_int, self._test_labels_batch = tf.train.batch_join(
                 test_image_label_list,
-                batch_size=test_size)
+                batch_size=batch_size)
 
         self._train_image_batch = tf.to_float(train_image_batch_int) / 255.0
         self._test_image_batch = tf.to_float(test_image_batch_int) / 255.0
@@ -131,11 +134,25 @@ class DC_dataset:
         self._coord.join(self._threads)
 
 
+def Display_imgs(image1, image2, n_image):
+    fig = plt.figure()
+    for i in range(n_image):
+        a = fig.add_subplot(2, n_image, i+1)
+        plt.imshow(image1[i, :, :, :])
+        a.set_title('test1-'+str(i))
+        a = fig.add_subplot(2, n_image, i+n_image+1)
+        plt.imshow(image2[i, :, :, :])
+        a.set_title('test2-'+str(i))
+    plt.show()
+
+
 if __name__ == '__main__':
     print('Running test main in pipeline.py')
     train_path = '/home/jimmy/WinDisk/data/pics/'
     with tf.Session() as sess:
-        with DC_dataset(train_path, sess, batch_size=500) as data:
+        Test_Size = 2000
+        with DC_dataset(train_path, sess,
+                        test_size=Test_Size, batch_size=500) as data:
             # data = DogsvsCats(train_path, sess, batch_size=500)
             for it in range(10):
                 train_images, train_labels = data.get_train_batch()
@@ -143,7 +160,21 @@ if __name__ == '__main__':
                 print('left top pixel RGB values[0,1]:',
                       train_images[0, 0, 0, :])
 
-            test_images, test_labels = data.get_test_set()
-            print('test_lables shape= ', test_labels.shape)
-            print('first 10th test_labels:', test_labels[:10])
-            print('number of positive cases in test_labels:', sum(test_labels))
+            for ib in range(int(Test_Size/500)):
+                test_images, test_labels = data.get_test_set()
+                print('test_lables shape= ', test_labels.shape)
+                print('first 10th test_labels:', test_labels[:10])
+                print('number of positive cases in test_labels:',
+                      sum(test_labels))
+            print('new start')
+
+            for ib in range(int(Test_Size/500)):
+                test_images2, test_labels2 = data.get_test_set()
+                print('test_lables shape= ', test_labels2.shape)
+                print('first 10th test_labels:', test_labels2[:10])
+                print('number of positive cases in test_labels:',
+                      sum(test_labels2))
+
+            n_image = 10
+            Display_imgs(test_images[:n_image, :, :, :],
+                         test_images2[:n_image, :, :, :], n_image)
